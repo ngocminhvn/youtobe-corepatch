@@ -69,7 +69,7 @@ def evaluate(metadata: dict, assets: list[str], build_result: str, release_tag: 
 
     report = "\n".join(
         [
-            "## Báo cáo auto-build Stable (kiểm tra 6 giờ/lần)",
+            "## Youtobe Patched — báo cáo Stable",
             "",
             f"**Kết luận: {headline}**",
             "",
@@ -83,7 +83,7 @@ def evaluate(metadata: dict, assets: list[str], build_result: str, release_tag: 
             "",
             "**Lưu ý:** Chỉ theo dõi phiên bản Stable do Morphe đề xuất. "
             "Bản Experimental không kích hoạt auto-build. "
-            "Chỉ tạo Release mới khi Morphe có phiên bản patch mới và đủ hai APK Stable.",
+            "Có thể phát hành riêng từng APK đã build thành công.",
             "",
         ]
     )
