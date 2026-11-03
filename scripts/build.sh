@@ -15,15 +15,15 @@ DIST_DIR="${DIST_DIR:-$ROOT_DIR/dist}"
 
 case "$APP" in
   youtube)
-    APP_NAME="YouTube"
+    APP_NAME="Youtobe Patched (YouTube)"
     APP_SLUG="youtube"
-    OUTPUT_NAME="Youtube"
+    OUTPUT_NAME="Youtobe-Patched-YouTube"
     PACKAGE_NAME="com.google.android.youtube"
     ;;
   youtube-music)
-    APP_NAME="YouTube Music"
+    APP_NAME="Youtobe Patched (YouTube Music)"
     APP_SLUG="youtube-music"
-    OUTPUT_NAME="YoutubeMusic"
+    OUTPUT_NAME="Youtobe-Patched-YouTube-Music"
     PACKAGE_NAME="com.google.android.apps.youtube.music"
     ;;
   *)
@@ -228,7 +228,7 @@ PATCH_VERSION="${PATCHES_TAG#v}"
 # Build date follows Vietnam local time: 09 October 2026 -> 091026.
 # The check workflow compares app/version/patch independently of this date.
 BUILD_DATE="$(TZ=Asia/Ho_Chi_Minh date +%d%m%y)"
-OUTPUT_BASENAME="${OUTPUT_NAME}-${VERSION}-morphe-${PATCH_VERSION}-${BUILD_DATE}"
+OUTPUT_BASENAME="${OUTPUT_NAME}-${VERSION}-patch-${PATCH_VERSION}-${BUILD_DATE}"
 
 FINAL_APK="$DIST_DIR/$OUTPUT_BASENAME.apk"
 FINAL_REPORT="$DIST_DIR/$OUTPUT_BASENAME-report.json"
