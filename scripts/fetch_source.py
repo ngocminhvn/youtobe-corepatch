@@ -49,6 +49,56 @@ class LinkParser(HTMLParser):
             self._text = []
 
 
+
+class VariantRowParser(HTMLParser):
+    """Collect a variant's link and format from its own APKMirror table row.
+
+    Avoid a broad +/- character window: adjacent BUNDLE rows can otherwise
+    make the standalone APK look like a split bundle (or vice versa).
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.rows: list[tuple[str, list[str]]] = []
+        self._row_tag: str | None = None
+        self._depth = 0
+        self._text: list[str] = []
+        self._links: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        classes = (attrs.get("class") or "").split()
+        if not self._row_tag:
+            if tag == "tr" or (tag == "div" and "table-row" in classes):
+                self._row_tag = tag
+                self._depth = 1
+                self._text = []
+                self._links = []
+            return
+
+        if tag == self._row_tag:
+            self._depth += 1
+        if tag == "a" and attrs.get("href"):
+            href = html_lib.unescape(attrs["href"])
+            if "-android-apk-download/" in href:
+                self._links.append(href)
+
+    def handle_data(self, data):
+        if self._row_tag:
+            self._text.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == self._row_tag:
+            self._depth -= 1
+            if self._depth == 0:
+                label = " ".join(self._text)
+                for href in self._links:
+                    self.rows.append((href, [label]))
+                self._row_tag = None
+                self._text = []
+                self._links = []
+
+
 def opener():
     jar = http.cookiejar.CookieJar()
     return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
@@ -82,55 +132,47 @@ def is_release_overview(url: str) -> bool:
 
 
 def select_release_variant(html: str, base_url: str) -> str | None:
-    """Select the best concrete APKMirror variant from a release page.
+    """Pick only a standalone APK, favoring universal/arm64 and nodpi.
 
-    Priority:
-      1. universal + BUNDLE
-      2. universal
-      3. BUNDLE
-      4. first concrete variant
+    Never select an APKM bundle just because it is the first variant.
     """
-    pattern = re.compile(
-        r'href=["\\\']([^"\\\']*-android-apk-download/[^"\\\']*)["\\\']',
-        re.I,
-    )
-
-    candidates: list[tuple[int, int, str]] = []
+    parser = VariantRowParser()
+    parser.feed(html)
     seen: set[str] = set()
-
-    for match in pattern.finditer(html):
-        href = html_lib.unescape(match.group(1))
+    candidates: list[tuple[int, int, str]] = []
+    for order, (href, text) in enumerate(parser.rows):
         absolute = urllib.parse.urljoin(base_url, href)
         if absolute in seen:
             continue
         seen.add(absolute)
-
-        start = max(0, match.start() - 3500)
-        end = min(len(html), match.end() + 3500)
-        context = html_lib.unescape(html[start:end])
-        context = re.sub(r"<[^>]+>", " ", context)
-        context = re.sub(r"\\s+", " ", context).lower()
-
+        label = " ".join(text).lower()
+        if re.search(r"\\bbundle\\b", label):
+            continue
+        if not re.search(r"\\bapk\\b", label):
+            continue
         score = 0
-        if re.search(r"\\buniversal\\b", context):
-            score += 10000
-        if re.search(r"\\bbundle\\b", context):
-            score += 3000
-        if "android 12l" in context or "api 32" in context:
-            score += 500
-        if "120-480dpi" in context or "120 - 480 dpi" in context:
+        if re.search(r"\\buniversal\\b", label):
+            score += 1000
+        if "arm64-v8a" in label:
+            score += 800
+        if "nodpi" in label:
             score += 250
+        candidates.append((score, -order, absolute))
 
-        candidates.append((score, -match.start(), absolute))
+    if candidates:
+        score, _, selected = max(candidates)
+        print(f"APKMirror standalone variant selected: {selected} (score={score})",
+              file=sys.stderr)
+        return selected
 
-    if not candidates:
-        return None
-
-    candidates.sort(reverse=True)
-    score, _, selected = candidates[0]
-    print(f"APKMirror variant selected: {selected}", file=sys.stderr)
-    print(f"APKMirror variant score: {score}", file=sys.stderr)
-    return selected
+    # If the release lists concrete variants but none can be confirmed as a
+    # standalone APK, fail closed rather than downloading a random APKM.
+    if re.search(r"-android-apk-download/", html, re.I):
+        raise RuntimeError(
+            "No confirmed standalone APK variant found on APKMirror release page; "
+            "cannot patch an APKM/split bundle. Check release variants."
+        )
+    return None
 
 
 def score_link(base: str, href: str, text: str) -> int:
@@ -266,23 +308,18 @@ def download_direct(url: str, out_tmp: Path) -> tuple[Path, str]:
 
 
 def detect_extension(path: Path, source_url: str) -> str:
-    url_path = urllib.parse.urlparse(source_url).path.lower()
-    for ext in APK_EXTS:
-        if url_path.endswith(ext):
-            return ext
-
+    # Inspect the archive, not its URL suffix (CDN links may be misleading).
     if not zipfile.is_zipfile(path):
         raise RuntimeError("Downloaded file is not an APK/ZIP bundle")
 
     with zipfile.ZipFile(path) as zf:
         names = zf.namelist()
-        nested_apks = [n for n in names if n.lower().endswith(".apk")]
-        if nested_apks:
-            return ".apkm"
         if "AndroidManifest.xml" in names:
             return ".apk"
+        if any(n.lower().endswith(".apk") for n in names):
+            return ".apkm"
 
-    raise RuntimeError("Could not determine whether downloaded file is APK or APK bundle")
+    raise RuntimeError("Downloaded archive has no AndroidManifest.xml or nested APKs")
 
 
 def main() -> int:
@@ -290,6 +327,8 @@ def main() -> int:
     ap.add_argument("url")
     ap.add_argument("--output-dir", default="input")
     ap.add_argument("--name", default="source-original")
+    ap.add_argument("--require-standalone", action="store_true",
+                    help="Reject APKM/split bundles; a single APK is required for patching")
     args = ap.parse_args()
 
     parsed = urllib.parse.urlparse(args.url)
@@ -312,6 +351,8 @@ def main() -> int:
             raise RuntimeError(f"Downloaded file is unexpectedly small: {downloaded.stat().st_size} bytes")
 
         ext = detect_extension(downloaded, final_url)
+        if args.require_standalone and ext != ".apk":
+            raise RuntimeError(f"Downloaded {ext} split bundle; standalone APK required")
         target = out_dir / f"{args.name}{ext}"
         shutil.copy2(downloaded, target)
 
