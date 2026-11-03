@@ -21,8 +21,8 @@ META = {
     },
 }
 ASSETS = [
-    "Youtube-21.16.256-morphe-1.46.0-091026.apk",
-    "YoutubeMusic-9.20.53-morphe-1.46.0-091026.apk",
+    "Youtobe-Patched-YouTube-21.16.256-patch-1.46.0-091026.apk",
+    "Youtobe-Patched-YouTube-Music-9.20.53-patch-1.46.0-091026.apk",
 ]
 
 
