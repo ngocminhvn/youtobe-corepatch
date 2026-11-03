@@ -14,8 +14,12 @@ tag="morphe-${EXPECTED_PATCHES_TAG#v}"
 [[ "$tag" == "$EXPECTED_RELEASE_TAG" ]] || { echo "Tag mismatch" >&2; exit 2; }
 mapfile -t infos < <(find artifacts -type f -name build-info.env | sort)
 num="$(jq -er 'length' <<< "$EXPECTED_APPS_JSON")"
-(( num > 0 && ${#infos[@]} == num )) ||
-  { echo "Expected $num artifacts, received ${#infos[@]}. Reject partial publication." >&2; exit 3; }
+(( num > 0 && ${#infos[@]} <= num )) ||
+  { echo "Unexpected number of build artifacts: ${#infos[@]} (planned $num)" >&2; exit 3; }
+if (( ${#infos[@]} == 0 )); then
+  echo "No verified APK artifact to publish. Failed apps will be retried on the next check."
+  exit 0
+fi
 read_value() { sed -n "s/^${1}=//p" "$2" | head -n 1; }
 declare -A seen=()
 apks=()
@@ -39,11 +43,11 @@ for info in "${infos[@]}"; do
   apks+=("$apk")
 done
 for app in $(jq -r '.[]' <<< "$EXPECTED_APPS_JSON"); do
-  [[ -n "${seen[$app]:-}" ]] || { echo "Missing planned APK $app" >&2; exit 3; }
+  [[ -n "${seen[$app]:-}" ]] ||
+    echo "::warning::Planned app $app did not produce an APK; will retry on the next check."
 done
 
 if [[ "$RELEASE_MODE" == "new_release" ]]; then
-  (( num == 2 )) || { echo "New release requires both apps" >&2; exit 3; }
   if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
     echo "Release already exists - refuse to overwrite" >&2
     exit 3
@@ -51,7 +55,7 @@ if [[ "$RELEASE_MODE" == "new_release" ]]; then
   gh release create "$tag" "${apks[@]}" \
     --repo "$GITHUB_REPOSITORY" --target main \
     --title "Morphe Patched $EXPECTED_PATCHES_TAG" \
-    --notes "Supported Stable YouTube and YouTube Music, Morphe $EXPECTED_PATCHES_TAG"
+    --notes "Verified Stable APKs built with Morphe $EXPECTED_PATCHES_TAG. Missing apps will be added on a future check."
 else
   gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null
   for info in "${infos[@]}"; do
@@ -72,9 +76,9 @@ fi
 notes="$(mktemp)"
 {
   echo "- Morphe patches: **$EXPECTED_PATCHES_TAG**"
-  echo "- Bundle: **YouTube + YouTube Music (Stable)**"
+  echo "- Publication policy: **publish verified APKs; retry missing apps**"
   echo
-  echo "### APKs"
+  echo "### Available APKs"
   gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets \
     --jq '.assets[].name' | sort | sed 's/^/- /'
 } > "$notes"
