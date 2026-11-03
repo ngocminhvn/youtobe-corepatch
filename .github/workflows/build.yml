@@ -1,5 +1,5 @@
-name: Morphe Multi-App Builder
-run-name: ${{ github.event_name == 'schedule' && 'Daily Morphe Stable check' || github.event_name == 'workflow_dispatch' && 'Manual Stable check' || 'Validate Morphe builder' }}
+name: Youtobe Patched Builder
+run-name: ${{ github.event_name == 'schedule' && 'Daily Youtobe Patched Stable check' || github.event_name == 'workflow_dispatch' && 'Manual Youtobe Patched Stable check' || 'Validate Youtobe Patched builder' }}
 
 on:
   push:
@@ -20,7 +20,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: morphe-${{ github.ref }}
+  group: youtobe-patched-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -33,12 +33,23 @@ jobs:
       - name: Syntax and regression tests
         run: |
           set -euo pipefail
-          bash -n scripts/build.sh scripts/publish_release.sh
+          bash -n scripts/build.sh scripts/publish_release.sh scripts/rebrand_releases.sh
           python3 -m compileall -q scripts
           python3 -m unittest discover -s tests -p 'test_*.py'
 
+  rebrand_existing_releases:
+    name: Rebrand existing Releases as Youtobe Patched
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[rebrand-releases]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rename published APK assets and release titles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/rebrand_releases.sh
+
   check:
-    name: Compare Morphe Stable versions with published APKs
+    name: Check Youtobe Patched Stable updates
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
@@ -79,7 +90,7 @@ jobs:
             --output "$GITHUB_OUTPUT" --summary "$GITHUB_STEP_SUMMARY"
 
   build:
-    name: Patch ${{ matrix.app }}
+    name: Build Youtobe Patched ${{ matrix.app }}
     needs: check
     if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-latest
@@ -143,7 +154,7 @@ jobs:
           sha256sum "$SOURCE_FILE"
           ls -lh "$SOURCE_FILE"
 
-      - name: Patch with latest Morphe release
+      - name: Build Youtobe Patched with upstream Morphe
         if: steps.plan.outputs.should_build == 'true'
         shell: bash
         env:
@@ -168,7 +179,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo '## Morphe CorePatch'
+            echo '## Youtobe Patched — CorePatch'
             if [[ "${{ steps.plan.outcome }}" != "success" ]]; then
               echo '❌ Không xác định được phiên bản Stable cần build.'
               echo 'Xem bước Resolve build target để biết lỗi API hoặc dữ liệu upstream.'
@@ -182,7 +193,7 @@ jobs:
               echo '- Stable đang được upstream khuyến nghị: `${{ steps.plan.outputs.target_version }}`'
               echo '- Morphe patches: `${{ steps.plan.outputs.patches_tag }}`'
               echo '- Release hiện có: [`${{ steps.plan.outputs.release_tag }}`](../../releases/tag/${{ steps.plan.outputs.release_tag }})'
-              echo '- Khuôn dạng APK hiện có: `<App>-${{ steps.plan.outputs.target_version }}-morphe-${{ steps.plan.outputs.patches_tag }}-DDMMYY.apk`'
+              echo '- Khuôn dạng APK hiện có: `<App>-${{ steps.plan.outputs.target_version }}-patch-${{ steps.plan.outputs.patches_tag }}-DDMMYY.apk`'
               echo '- Lý do skip: `asset-exists`'
               echo
               echo '> Các bản Experimental không được tự động build.'
@@ -211,7 +222,7 @@ jobs:
         if: success() && steps.plan.outputs.should_build == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.meta.outputs.APP_SLUG }}-${{ steps.meta.outputs.APP_VERSION }}-Morphe
+          name: Youtobe-Patched-${{ steps.meta.outputs.APP_SLUG }}-${{ steps.meta.outputs.APP_VERSION }}
           path: dist/
           compression-level: 0
           retention-days: 7
@@ -231,17 +242,17 @@ jobs:
           if-no-files-found: ignore
 
   publish:
-    name: Publish changed Stable APKs only
+    name: Publish Youtobe Patched Stable APKs
     needs: [check, build]
     if: ${{ always() && needs.check.result == 'success' && needs.check.outputs.should_build == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download APK artifacts from this run
+      - name: Download Youtobe Patched build artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - name: Verify artifacts and publish
+      - name: Verify and publish Youtobe Patched APKs
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_MODE: ${{ needs.check.outputs.mode }}
