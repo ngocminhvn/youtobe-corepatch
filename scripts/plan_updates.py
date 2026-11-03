@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Decide daily Stable APK changes: new Morphe release vs changed app versions."""
+"""Decide daily Youtobe Patched builds from upstream Morphe Stable targets."""
 import argparse
 import json
 from pathlib import Path
@@ -45,12 +45,12 @@ def plan_updates(metadata: dict, release: dict) -> dict:
 
 def summary(p: dict) -> str:
     status = {
-        "new_release": "Morphe mới: build cả hai APK Stable và tạo Release mới.",
+        "new_release": "Có phiên bản patch mới: build Youtobe Patched và tạo Release.",
         "update_existing": "Stable app mới/thiếu: chỉ build ứng dụng cần cập nhật trong Release hiện tại.",
         "none": "KHÔNG CÓ CẬP NHẬT: dừng sau metadata check. Không tải APK, build hay publish.",
     }[p["mode"]]
-    lines = ["## Daily Morphe Stable check", "", f"**{status}**", "",
-             f"- Morphe patches: {p['patches_tag']}",
+    lines = ["## Youtobe Patched — Daily Stable check", "", f"**{status}**", "",
+             f"- Upstream Morphe patches: {p['patches_tag']}",
              f"- Release tag: {p['release_tag']}", "",
              "| App | Latest supported Stable | Decision |", "|---|---|---|"]
     for key, label in APPS:
