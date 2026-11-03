@@ -136,7 +136,8 @@ jobs:
           set -euo pipefail
           python3 scripts/fetch_source.py "$SOURCE_URL" \
             --output-dir input \
-            --name "$APP-original" | tee source.env
+            --name "$APP-original" \
+            --require-standalone | tee source.env
           cat source.env >> "$GITHUB_OUTPUT"
           source source.env
           sha256sum "$SOURCE_FILE"
@@ -232,7 +233,7 @@ jobs:
   publish:
     name: Publish changed Stable APKs only
     needs: [check, build]
-    if: needs.check.outputs.should_build == 'true' && needs.build.result == 'success'
+    if: ${{ always() && needs.check.result == 'success' && needs.check.outputs.should_build == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
