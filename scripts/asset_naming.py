@@ -12,19 +12,19 @@ import re
 import sys
 
 PREFIXES = {
-    "youtube": "Youtube",
-    "youtube-music": "YoutubeMusic",
+    "youtube": "Youtobe-Patched-YouTube",
+    "youtube-music": "Youtobe-Patched-YouTube-Music",
 }
 
 
 def asset_name(app: str, version: str, patches_version: str, ddmmyy: str) -> str:
     if not re.fullmatch(r"\d{6}", ddmmyy):
         raise ValueError("Date must use DDMMYY (six digits)")
-    return f"{PREFIXES[app]}-{version}-morphe-{patches_version}-{ddmmyy}.apk"
+    return f"{PREFIXES[app]}-{version}-patch-{patches_version}-{ddmmyy}.apk"
 
 
 def current_asset(name: str, app: str, version: str, patches_version: str) -> bool:
-    prefix = f"{PREFIXES[app]}-{version}-morphe-{patches_version}-"
+    prefix = f"{PREFIXES[app]}-{version}-patch-{patches_version}-"
     return name.startswith(prefix) and bool(re.fullmatch(r"\d{6}\.apk", name[len(prefix):]))
 
 
