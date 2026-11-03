@@ -25,7 +25,7 @@ APPS = {
 
 def get_json(url: str):
     headers = {
-        "User-Agent": "morphe-patched-support-sync",
+        "User-Agent": "youtobe-patched-support-sync",
         "Accept": "application/vnd.github+json",
     }
     token = os.environ.get("GH_TOKEN")
@@ -122,7 +122,7 @@ def markdown(
     app_key: str | None,
 ):
     keys = [app_key] if app_key else list(APPS)
-    title = f"# Supported {APPS[app_key]['name']} versions" if app_key else "# Supported app versions"
+    title = f"# Youtobe Patched — supported {APPS[app_key]['name']} versions" if app_key else "# Youtobe Patched — supported app versions"
 
     lines = [
         title,
