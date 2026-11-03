@@ -1,15 +1,15 @@
-# Morphe Patched
+# Youtobe Patched
 
-CorePatch-oriented Morphe builder for **YouTube**, **YouTube Music**.
+**Youtobe Patched** builds **YouTube** and **YouTube Music** for CorePatch ROMs using upstream Morphe patches.
 
-## Current stable targets
+## Latest verified Stable targets (3 November 2026)
 
-- Morphe patches: **v1.47.0**
+- Upstream Morphe patches: **v2.0.0**
 
 | App | Stable / recommended | minSdk | Default patches |
 |---|---:|---:|---:|
-| YouTube | **21.20.405** | 28 | 96/96 |
-| YouTube Music | **9.20.53** | 26 | 47/47 |
+| YouTube | **21.30.216** | — | — |
+| YouTube Music | **9.30.53** | — | — |
 
 See **[SUPPORTED.md](SUPPORTED.md)** for the complete stable + experimental compatibility matrix.
 
@@ -31,18 +31,18 @@ The Play Store update-blocking patch is not effective when the app is installed 
 
 ## Release output
 
-Each Morphe patches version has **one combined GitHub Release** (two APKs: YouTube and YouTube Music).
-When Morphe patches releases a new version, the workflow builds both Stable APKs and creates a new Release. Later Stable app updates replace only that app's APK within the matching Morphe Release; older releases are preserved.
+Each upstream Morphe patches version has one **Youtobe Patched Release** for YouTube and YouTube Music.
+New patch versions trigger both Stable builds. Successful APKs are published independently, failed apps are retried later, and older releases are preserved.
 
 APK filenames use Vietnam build date in `DDMMYY` format, with no `NeedCorePatch` suffix:
 
-- `Youtube-<version>-morphe-<patch>-DDMMYY.apk`
-- `YoutubeMusic-<version>-morphe-<patch>-DDMMYY.apk`
+- `Youtobe-Patched-YouTube-<version>-patch-<patch>-DDMMYY.apk`
+- `Youtobe-Patched-YouTube-Music-<version>-patch-<patch>-DDMMYY.apk`
 
-For example: `Youtube-21.16.256-morphe-1.46.0-091026.apk`.
+For example: `Youtobe-Patched-YouTube-21.30.216-patch-2.0.0-031126.apk`.
 
 The workflow checks Morphe's supported Stable targets once per day (09:13 Vietnam time).
-A new Morphe patch version creates a release with both Stable APKs. A newer supported
+A new Morphe patch version publishes successfully built Stable APKs. A newer supported
 Stable app version updates only that app in the current release. Otherwise, it stops after the check.
 
 ## Status legend
@@ -50,4 +50,6 @@ Stable app version updates only that app in the current release. Otherwise, it s
 - 🟢 **Stable** — recommended target.
 - 🧪 **Experimental** — supported upstream, but not the recommended stable target.
 
-[Morphe patches release](https://github.com/MorpheApp/morphe-patches/releases/tag/v1.47.0) · [GitHub Releases](../../releases)
+[Morphe patches (upstream)](https://github.com/MorpheApp/morphe-patches/releases/tag/v2.0.0) · [GitHub Releases](../../releases)
+
+> **Branding:** Youtobe Patched is the project/release name. Original package names, signing identity and launcher icons remain unchanged for CorePatch compatibility. Release tags `morphe-*` are preserved for version-history compatibility.
