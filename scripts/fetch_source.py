@@ -146,12 +146,12 @@ def select_release_variant(html: str, base_url: str) -> str | None:
             continue
         seen.add(absolute)
         label = " ".join(text).lower()
-        if re.search(r"\\bbundle\\b", label):
+        if re.search(r"\bbundle\b", label):
             continue
-        if not re.search(r"\\bapk\\b", label):
+        if not re.search(r"\bapk\b", label):
             continue
         score = 0
-        if re.search(r"\\buniversal\\b", label):
+        if re.search(r"\buniversal\b", label):
             score += 1000
         if "arm64-v8a" in label:
             score += 800
