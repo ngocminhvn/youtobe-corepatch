@@ -54,14 +54,14 @@ if [[ "$RELEASE_MODE" == "new_release" ]]; then
   fi
   gh release create "$tag" "${apks[@]}" \
     --repo "$GITHUB_REPOSITORY" --target main \
-    --title "Morphe Patched $EXPECTED_PATCHES_TAG" \
-    --notes "Verified Stable APKs built with Morphe $EXPECTED_PATCHES_TAG. Missing apps will be added on a future check."
+    --title "Youtobe Patched $EXPECTED_PATCHES_TAG" \
+    --notes "Youtobe Patched Stable APKs. Upstream Morphe $EXPECTED_PATCHES_TAG. Missing apps will be added on a future check."
 else
   gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null
   for info in "${infos[@]}"; do
     app="$(read_value APP_KEY "$info")"
     apk="$(dirname "$info")/$(read_value OUTPUT_APK "$info")"
-    case "$app" in youtube) prefix=Youtube- ;; youtube-music) prefix=YoutubeMusic- ;; esac
+    case "$app" in youtube) prefix=Youtobe-Patched-YouTube- ;; youtube-music) prefix=Youtobe-Patched-YouTube-Music- ;; esac
     keep="$(basename "$apk")"
     gh release upload "$tag" "$apk" --repo "$GITHUB_REPOSITORY" --clobber
     mapfile -t names < <(gh release view "$tag" --repo "$GITHUB_REPOSITORY" \
@@ -75,20 +75,22 @@ fi
 
 notes="$(mktemp)"
 {
-  echo "- Morphe patches: **$EXPECTED_PATCHES_TAG**"
+  echo "# Youtobe Patched"
+  echo
+  echo "- Upstream patch engine: **Morphe $EXPECTED_PATCHES_TAG**"
   echo "- Publication policy: **publish verified APKs; retry missing apps**"
   echo
-  echo "### Available APKs"
+  echo "### Youtobe Patched APKs"
   gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets \
     --jq '.assets[].name' | sort | sed 's/^/- /'
 } > "$notes"
 gh release edit "$tag" --repo "$GITHUB_REPOSITORY" \
-  --title "Morphe Patched $EXPECTED_PATCHES_TAG" --notes-file "$notes"
+  --title "Youtobe Patched $EXPECTED_PATCHES_TAG" --notes-file "$notes"
 rm -f "$notes"
-echo "Published $num changed APK(s) to $tag; mode=$RELEASE_MODE"
+echo "Published ${#apks[@]} Youtobe Patched APK(s) to $tag; mode=$RELEASE_MODE"
 {
- echo "## Published"
+ echo "## Youtobe Patched — Published"
  echo "- Release: https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag"
  echo "- Mode: $RELEASE_MODE"
- echo "- APKs: $num"
+ echo "- APKs: ${#apks[@]}"
 } >> "$GITHUB_STEP_SUMMARY"
