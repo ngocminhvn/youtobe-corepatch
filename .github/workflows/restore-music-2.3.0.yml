@@ -1,0 +1,54 @@
+name: Restore YouTube Music v2.3.0 (one time)
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-music-2.3.0.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  restore:
+    if: github.repository == 'ngocminhvn/youtobe-corepatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified Music artifact from run 44066515891
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download 44066515891 --repo "$GITHUB_REPOSITORY" \
+            --name 'Youtobe-Patched-youtube-music-9.30.53' --dir restored
+          test -s restored/build-info.env
+
+      - name: Verify Music version and APK checksum, then restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          info=restored/build-info.env
+          grep -Fxq 'APP_KEY=youtube-music' "$info"
+          grep -Fxq 'APP_VERSION=9.30.53' "$info"
+          grep -Fxq 'MORPHE_PATCHES_TAG=v2.3.0' "$info"
+          apk="$(sed -n 's/^OUTPUT_APK=//p' "$info" | head -1)"
+          [[ "$apk" =~ ^Youtobe-Patched-YouTube-Music-9\.30\.53-patch-2\.3\.0-[0-9]{6}\.apk$ ]]
+          checksum="$(sed -n 's/^APK_SHA256=//p' "$info" | head -1)"
+          [[ "$checksum" =~ ^[0-9a-f]{64}$ ]]
+          printf '%s  %s\n' "$checksum" "restored/$apk" | sha256sum --check -
+          tag=morphe-2.3.0
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name' | grep -Fxq "$apk"; then
+            echo "Music already present in release; nothing to upload."
+          else
+            gh release upload "$tag" "restored/$apk" --repo "$GITHUB_REPOSITORY"
+            echo "Restored Music APK: $apk"
+          fi
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name' | tee /tmp/final-assets
+          grep -Fxq "$apk" /tmp/final-assets
+          grep -Eq '^Youtobe-Patched-YouTube-[0-9].*\.apk$' /tmp/final-assets
+          echo "Verified: YouTube and YouTube Music both present."
