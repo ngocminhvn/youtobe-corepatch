@@ -61,13 +61,18 @@ else
   for info in "${infos[@]}"; do
     app="$(read_value APP_KEY "$info")"
     apk="$(dirname "$info")/$(read_value OUTPUT_APK "$info")"
-    case "$app" in youtube) prefix=Youtobe-Patched-YouTube- ;; youtube-music) prefix=Youtobe-Patched-YouTube-Music- ;; esac
     keep="$(basename "$apk")"
     gh release upload "$tag" "$apk" --repo "$GITHUB_REPOSITORY" --clobber
     mapfile -t names < <(gh release view "$tag" --repo "$GITHUB_REPOSITORY" \
       --json assets --jq '.assets[].name')
     for old in "${names[@]}"; do
-      [[ "$old" != "$keep" && "$old" == "$prefix"* && "$old" == *.apk ]] || continue
+      [[ "$old" != "$keep" ]] || continue
+      # Music filenames share the YouTube prefix; only remove assets of this app.
+      case "$app:$old" in
+        youtube:Youtobe-Patched-YouTube-Music-*.apk) continue ;;
+        youtube:Youtobe-Patched-YouTube-*.apk|youtube-music:Youtobe-Patched-YouTube-Music-*.apk) ;;
+        *) continue ;;
+      esac
       gh release delete-asset "$tag" "$old" --repo "$GITHUB_REPOSITORY" --yes
     done
   done
