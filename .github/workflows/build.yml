@@ -2,15 +2,6 @@ name: Youtobe Patched Builder
 run-name: ${{ github.event_name == 'schedule' && 'Daily Youtobe Patched Stable check' || github.event_name == 'workflow_dispatch' && 'Manual Youtobe Patched Stable check' || 'Validate Youtobe Patched builder' }}
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/build.yml'
-      - 'scripts/**'
-      - 'tests/**'
-      - 'config/**'
-      - 'README.md'
-      - 'SUPPORTED.md'
   schedule:
     # 09:13 GMT+7 = 02:13 UTC, once daily.
     - cron: '13 2 * * *'
