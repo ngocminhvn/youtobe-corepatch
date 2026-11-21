@@ -26,7 +26,7 @@ append_app_section() {
       '.assets[]? | select(.name | test($pattern)) | .name' <<< "$release_json" | sort
   )
   if (( ${#names[@]} > 0 )); then
-    printf '%s\\n' "${names[@]}" | sed 's/^/- /' >> "$notes"
+    printf '%s\n' "${names[@]}" | sed 's/^/- /' >> "$notes"
   else
     echo "- No verified APK published yet." >> "$notes"
   fi
