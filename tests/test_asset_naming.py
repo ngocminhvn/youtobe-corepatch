@@ -11,17 +11,21 @@ from asset_naming import asset_name, current_asset
 class AssetNamingTests(unittest.TestCase):
     def test_youtube(self):
         name = asset_name("youtube", "21.30.216", "2.0.0", "031126")
-        self.assertEqual(name, "Youtobe-Patched-YouTube-21.30.216-patch-2.0.0-031126.apk")
+        self.assertEqual(name, "YouTube-21.30.216-patch-2.0.0-031126.apk")
         self.assertTrue(current_asset(name, "youtube", "21.30.216", "2.0.0"))
 
     def test_music(self):
         name = asset_name("youtube-music", "9.30.53", "2.0.0", "031126")
-        self.assertEqual(name, "Youtobe-Patched-YouTube-Music-9.30.53-patch-2.0.0-031126.apk")
+        self.assertEqual(name, "YouTube-Music-9.30.53-patch-2.0.0-031126.apk")
         self.assertTrue(current_asset(name, "youtube-music", "9.30.53", "2.0.0"))
         self.assertFalse(current_asset(name, "youtube", "9.30.53", "2.0.0"))
 
-    def test_previous_brand_no_longer_current(self):
-        self.assertFalse(current_asset(
+    def test_previous_names_are_recognized_during_migration(self):
+        self.assertTrue(current_asset(
+            "Youtobe-Patched-YouTube-21.30.216-patch-2.0.0-031126.apk",
+            "youtube", "21.30.216", "2.0.0",
+        ))
+        self.assertTrue(current_asset(
             "YoutubeMusic-9.30.53-morphe-2.0.0-031126.apk",
             "youtube-music", "9.30.53", "2.0.0",
         ))

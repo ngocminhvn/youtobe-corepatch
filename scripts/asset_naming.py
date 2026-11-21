@@ -12,8 +12,14 @@ import re
 import sys
 
 PREFIXES = {
-    "youtube": "Youtobe-Patched-YouTube",
-    "youtube-music": "Youtobe-Patched-YouTube-Music",
+    "youtube": "YouTube",
+    "youtube-music": "YouTube-Music",
+}
+
+# Keep recognizing previous names while historical release assets are migrated.
+LEGACY_PREFIXES = {
+    "youtube": ("Youtobe-Patched-YouTube", "Youtube"),
+    "youtube-music": ("Youtobe-Patched-YouTube-Music", "YoutubeMusic"),
 }
 
 
@@ -24,8 +30,15 @@ def asset_name(app: str, version: str, patches_version: str, ddmmyy: str) -> str
 
 
 def current_asset(name: str, app: str, version: str, patches_version: str) -> bool:
-    prefix = f"{PREFIXES[app]}-{version}-patch-{patches_version}-"
-    return name.startswith(prefix) and bool(re.fullmatch(r"\d{6}\.apk", name[len(prefix):]))
+    candidates = [(PREFIXES[app], "patch")]
+    candidates.extend((prefix, "patch") for prefix in LEGACY_PREFIXES[app])
+    candidates.append((LEGACY_PREFIXES[app][-1], "morphe"))
+
+    for prefix, marker in candidates:
+        expected = f"{prefix}-{version}-{marker}-{patches_version}-"
+        if name.startswith(expected) and re.fullmatch(r"\d{6}\.apk", name[len(expected):]):
+            return True
+    return False
 
 
 def main() -> int:

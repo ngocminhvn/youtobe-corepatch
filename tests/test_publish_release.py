@@ -38,8 +38,8 @@ class PublishReleaseTests(unittest.TestCase):
 
             versions = {"youtube": "21.30.216", "youtube-music": "9.30.53"}
             prefixes = {
-                "youtube": "Youtobe-Patched-YouTube",
-                "youtube-music": "Youtobe-Patched-YouTube-Music",
+                "youtube": "YouTube",
+                "youtube-music": "YouTube-Music",
             }
             other = "youtube-music" if app == "youtube" else "youtube"
             filename = f"{prefixes[app]}-{versions[app]}-patch-2.3.0-191126.apk"

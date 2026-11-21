@@ -67,10 +67,10 @@ else
       --json assets --jq '.assets[].name')
     for old in "${names[@]}"; do
       [[ "$old" != "$keep" ]] || continue
-      # Music filenames share the YouTube prefix; only remove assets of this app.
+      # Never delete the other app's assets when updating only one app.
       case "$app:$old" in
-        youtube:Youtobe-Patched-YouTube-Music-*.apk) continue ;;
-        youtube:Youtobe-Patched-YouTube-*.apk|youtube-music:Youtobe-Patched-YouTube-Music-*.apk) ;;
+        youtube:YouTube-Music-*.apk|youtube:Youtobe-Patched-YouTube-Music-*.apk|youtube:YoutubeMusic-*.apk) continue ;;
+        youtube:YouTube-*.apk|youtube:Youtobe-Patched-YouTube-*.apk|youtube:Youtube-*.apk|youtube-music:YouTube-Music-*.apk|youtube-music:Youtobe-Patched-YouTube-Music-*.apk|youtube-music:YoutubeMusic-*.apk) ;;
         *) continue ;;
       esac
       gh release delete-asset "$tag" "$old" --repo "$GITHUB_REPOSITORY" --yes
@@ -85,9 +85,21 @@ notes="$(mktemp)"
   echo "- Upstream patch engine: **Morphe $EXPECTED_PATCHES_TAG**"
   echo "- Publication policy: **publish verified APKs; retry missing apps**"
   echo
-  echo "### Youtobe Patched APKs"
-  gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets \
-    --jq '.assets[].name' | sort | sed 's/^/- /'
+  echo "## YouTube"
+  youtube_assets="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -E '^YouTube-[0-9]' || true)"
+  if [[ -n "$youtube_assets" ]]; then
+    printf '%s\n' "$youtube_assets" | sort | sed 's/^/- /'
+  else
+    echo "- No verified APK published yet; the next Stable check will retry this app."
+  fi
+  echo
+  echo "## YouTube Music"
+  music_assets="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -E '^YouTube-Music-[0-9]' || true)"
+  if [[ -n "$music_assets" ]]; then
+    printf '%s\n' "$music_assets" | sort | sed 's/^/- /'
+  else
+    echo "- No verified APK published yet; the next Stable check will retry this app."
+  fi
 } > "$notes"
 gh release edit "$tag" --repo "$GITHUB_REPOSITORY" \
   --title "Youtobe Patched $EXPECTED_PATCHES_TAG" --notes-file "$notes"

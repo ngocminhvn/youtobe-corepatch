@@ -36,10 +36,12 @@ New patch versions trigger both Stable builds. Successful APKs are published ind
 
 APK filenames use Vietnam build date in `DDMMYY` format, with no `NeedCorePatch` suffix:
 
-- `Youtobe-Patched-YouTube-<version>-patch-<patch>-DDMMYY.apk`
-- `Youtobe-Patched-YouTube-Music-<version>-patch-<patch>-DDMMYY.apk`
+- `YouTube-<version>-patch-<patch>-DDMMYY.apk`
+- `YouTube-Music-<version>-patch-<patch>-DDMMYY.apk`
 
-For example: `Youtobe-Patched-YouTube-21.30.216-patch-2.0.0-031126.apk`.
+Examples:
+- YouTube: `YouTube-21.30.216-patch-2.0.0-031126.apk`
+- YouTube Music: `YouTube-Music-9.30.53-patch-2.0.0-031126.apk`
 
 The workflow checks Morphe's supported Stable targets once per day (09:13 Vietnam time).
 A new Morphe patch version publishes successfully built Stable APKs. A newer supported

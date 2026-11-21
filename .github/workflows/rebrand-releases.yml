@@ -1,0 +1,33 @@
+name: Rebrand Youtobe Patched Releases
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/rebrand_releases.sh'
+      - '.github/workflows/rebrand-releases.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rebrand-youtobe-patched-releases
+  cancel-in-progress: false
+
+jobs:
+  rebrand:
+    name: Rename APK assets and repair release notes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate scripts and regression tests
+        run: |
+          set -euo pipefail
+          bash -n scripts/build.sh scripts/publish_release.sh scripts/rebrand_releases.sh
+          python3 -m compileall -q scripts
+          python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Rename existing assets and rebuild YouTube / YouTube Music sections
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/rebrand_releases.sh

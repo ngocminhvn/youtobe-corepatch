@@ -22,8 +22,8 @@ def meta(patch="v1.47.0", yt="21.20.405", music="9.20.53"):
 
 def release(yt="21.20.405", music="9.20.53"):
     return {"tag_name": "morphe-1.47.0", "assets": [
-        {"name": f"Youtobe-Patched-YouTube-{yt}-patch-1.47.0-121026.apk"},
-        {"name": f"Youtobe-Patched-YouTube-Music-{music}-patch-1.47.0-191026.apk"},
+        {"name": f"YouTube-{yt}-patch-1.47.0-121026.apk"},
+        {"name": f"YouTube-Music-{music}-patch-1.47.0-191026.apk"},
     ]}
 
 

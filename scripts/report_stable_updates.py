@@ -15,8 +15,8 @@ from pathlib import Path
 from asset_naming import current_asset
 
 APPS = (
-    ("youtube", "YouTube", "Youtube"),
-    ("youtube-music", "YouTube Music", "YoutubeMusic"),
+    ("youtube", "YouTube"),
+    ("youtube-music", "YouTube Music"),
 )
 
 
@@ -31,7 +31,7 @@ def evaluate(metadata: dict, assets: list[str], build_result: str, release_tag: 
     rows = []
     missing = 0
 
-    for key, title, prefix in APPS:
+    for key, title in APPS:
         versions = metadata.get("apps", {}).get(key, {}).get("versions", [])
         stable = next(
             (item["version"] for item in versions if item.get("experimental") is False),

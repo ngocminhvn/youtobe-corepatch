@@ -17,13 +17,13 @@ case "$APP" in
   youtube)
     APP_NAME="Youtobe Patched (YouTube)"
     APP_SLUG="youtube"
-    OUTPUT_NAME="Youtobe-Patched-YouTube"
+    OUTPUT_NAME="YouTube"
     PACKAGE_NAME="com.google.android.youtube"
     ;;
   youtube-music)
     APP_NAME="Youtobe Patched (YouTube Music)"
     APP_SLUG="youtube-music"
-    OUTPUT_NAME="Youtobe-Patched-YouTube-Music"
+    OUTPUT_NAME="YouTube-Music"
     PACKAGE_NAME="com.google.android.apps.youtube.music"
     ;;
   *)
